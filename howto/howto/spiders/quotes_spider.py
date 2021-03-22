@@ -13,6 +13,8 @@ class QuoteSpider(scrapy.Spider):
 
         courses = response.css(".col-sm-12.col-md-6.col-lg-4.col-xl-4")
         for course in courses:
+            if course.css(".card-price .card-price-full::text").get() == '0.00$' or course.css(".card-price span::text").get() == 'Free':
+                break
             Icourse = course.css(".card-title::text").extract()
             Iexcerpt = course.css(".card-text::text").extract()
             Icategory = course.css(".card-cat::text").extract()
@@ -28,3 +30,10 @@ class QuoteSpider(scrapy.Spider):
             items['url'] = Iurl
 
             yield items
+        
+        next_page = response.css(".page-link[aria-label='Next']::attr('href')").get()
+
+        if courses[0].css(".card-price .card-price-full::text").get() != '0.00$' and course.css(".card-price span::text").get() != 'Free':
+            yield response.follow(next_page, callback= self.parse)
+        else:
+            return
